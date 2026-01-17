@@ -3,6 +3,8 @@ DirectX 11 기반 3D 게임 엔진
 
 <img width="2002" height="1165" alt="image" src="https://github.com/user-attachments/assets/9dea4cd7-dee2-47c6-bca4-e2ed3411c6a6" />
 
+<img width="2002" height="1165" alt="image" src="https://github.com/user-attachments/assets/96aa2ebd-ce62-415b-9a54-1d8cec722aec" />
+
 <img width="2002" height="1165" alt="image" src="https://github.com/user-attachments/assets/d983fac4-5eb0-470a-a8f8-6d7e09114e4d" />
 
 
