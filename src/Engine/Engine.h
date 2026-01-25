@@ -3,6 +3,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <memory>
+#include <filesystem> // Initialize 분리용
 #include <Core/ComponentRegistry.h>
 
 namespace Alice
@@ -69,6 +70,97 @@ namespace Alice
         /// World::Clear()와 PhysicsSystem 정리를 함께 처리하여 누락을 방지
         void ClearWorldAndPhysics();
         //===========================================
+
+        // =========================================================================================
+        // Initialize / Update / Render 의미 단위 분리
+        // - Engine::Initialize/Update/Render는 "흐름"만 남기고, 실제 블록은 아래 함수로 이동합니다.
+        // =========================================================================================
+
+        // ---- Initialize 분리 ----
+        /// 실행 파일 디렉토리 경로를 반환합니다.
+        std::filesystem::path InitializeGetExeDir() const;
+
+        /// ResourceManager 초기화 및 게임 모드 데이터 무결성 검증을 수행합니다.
+        bool InitializeResourceManagers(const std::filesystem::path& exeDir);
+
+        /// PVD 설정 로드 및 PhysX 컨텍스트 초기화를 수행합니다.
+        bool InitializePhysicsContext(const std::filesystem::path& exeDir);
+
+        /// 윈도우 생성, 입력 시스템 및 렌더 디바이스 초기화를 수행합니다.
+        bool InitializeWindowInputAndDevice(int nCmdShow);
+
+        /// 에디터 모드일 경우 EditorCore 초기화를 수행합니다.
+        bool InitializeEditorCoreIfNeeded();
+
+        /// 오디오 시스템 초기화를 수행합니다.
+        bool InitializeAudio();
+
+        /// Forward/Deferred/DebugDraw/Effect/Trail/Compute/UI 등 렌더링 시스템 초기화를 수행합니다.
+        bool InitializeRenderSystems();
+
+        /// 기본 카메라 설정 및 스크립트 핫리로드를 수행합니다.
+        void InitializeCameraAndHotReload();
+
+        /// 씬 매니저 생성 및 초기 씬 로드를 수행합니다.
+        void InitializeSceneManagerAndLoadFirstScene(const std::filesystem::path& exeDir);
+
+        /// PhysicsSystem 생성 및 World Clear 콜백 설정을 수행합니다.
+        void InitializePhysicsSystemAndCallbacks();
+
+        /// ScriptSystem 델리게이트 바인딩 및 UI 리소스 복구를 수행합니다.
+        void InitializeBindDelegatesAfterSceneLoad();
+
+        /// World::Clear() 직전 호출되는 정리 루틴 (콜백이므로 접두사 규칙 대상 아님)
+        void WorldOnBeforeClear();
+
+        // ---- Update 분리 ----
+        /// 타이머 및 입력 시스템을 갱신하고 delta time을 반환합니다.
+        float UpdateTickTimerAndInput();
+
+        /// 에디터 모드에서 Play/Stop 시 씬 스냅샷 저장 및 복원을 처리합니다.
+        void UpdateHandleEditorPlayStopSnapshot();
+
+        /// 씬 및 스크립트 시스템을 업데이트하고, 씬 변경 여부를 반환합니다.
+        /// \return true면 "씬이 바뀐 프레임"
+        bool UpdateSceneAndScripts(float dt);
+
+        /// 애니메이션, 물리, 카메라 시스템 등 런타임 시스템을 업데이트합니다.
+        void UpdateRuntimeSystems(float dt);
+
+        /// 에디터 프리캠 입력 처리를 수행합니다.
+        void UpdateEditorFreeCam(float dt);
+
+        /// 최종 카메라 LookAt을 적용합니다.
+        void UpdateApplyFinalCamera();
+
+        /// UIWorld 업데이트를 수행합니다.
+        void UpdateUIWorld();
+
+        // ---- Render 분리 ----
+        /// 렌더링 시스템 전환 요청이 있으면 안전하게 전환하고 GPU 바인딩을 해제합니다.
+        void RenderApplyPendingRenderSystemChange();
+
+        /// 에디터 모드일 경우 EditorCore 및 디버그 드로우를 렌더링합니다.
+        void RenderEditorFrame();
+
+        /// 스키닝 드로우 커맨드 빌드 및 온디맨드 메시 로딩을 수행합니다.
+        void RenderBuildSkinnedDrawCommandsAndLoadMeshes();
+
+        /// Forward/Deferred 렌더링 패스를 실행합니다.
+        void RenderScenePass(int shadingMode);
+
+        /// Depth Stencil View만 unbind합니다 (depth SRV 읽기 전 필수).
+        void RenderUnbindDepthOnly();
+
+        /// ComputeEffectSystem을 실행합니다.
+        void RenderExecuteComputeEffects();
+
+        /// 파티클 오버레이, 톤매핑, 블룸, UI 합성을 수행합니다.
+        void RenderCompositeParticlesAndToneMap();
+
+        /// 디버그 드로우, 이펙트, 트레일, ImGui 오버레이를 렌더링합니다.
+        void RenderOverlays();
+        // =========================================================================================
 
     private:
         struct Impl;
