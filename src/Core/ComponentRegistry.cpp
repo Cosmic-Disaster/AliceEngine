@@ -760,14 +760,14 @@ namespace Alice
             .property("m_screenSize", &UITransform::m_screenSize);
 
         // UI_ImageComponent 등록 (public 멤버만)
-        // m_path는 private이므로 직렬화 시 수동으로 처리해야 함
+        // m_path는 GetImagePath/SetImagePath를 통해 property로 등록
         rttr::registration::class_<UI_ImageComponent>("UI_ImageComponent")
             .constructor<>()
             .property("m_size", &UI_ImageComponent::m_size)
             .property("m_srcPos", &UI_ImageComponent::m_srcPos)
             .property("SrcWidthHeight", &UI_ImageComponent::SrcWidthHeight)
-            .property("m_pivot", &UI_ImageComponent::m_pivot);
-            // m_path는 private이므로 직렬화 시 수동으로 처리
+            .property("m_pivot", &UI_ImageComponent::m_pivot)
+            .property("ImagePath", &UI_ImageComponent::GetImagePath, &UI_ImageComponent::SetImagePath);
 
         // UI_ScriptComponent 등록
         rttr::registration::class_<UI_ScriptComponent>("UI_ScriptComponent")

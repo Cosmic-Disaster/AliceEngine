@@ -21,6 +21,8 @@
 #include <memory>
 #include <fstream>
 #include <sstream>
+#include <thread>      // std::this_thread::sleep_for
+#include <chrono>      // std::chrono::milliseconds
 #include "json/json.hpp"
 
 // Core
@@ -641,6 +643,14 @@ namespace Alice
 			}
 
 			if (!pImpl->m_isRunning) break;
+
+			// [Fix] 최소화 상태(Iconic)일 때 렌더링/업데이트 중지 및 절전
+			// 이 코드가 없으면 최소화 시 (0,0) 크기로 렌더링을 시도하여 DX11/ImGui에서 터짐
+			if (IsIconic(pImpl->m_hWnd))
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				continue;
+			}
 
 			Update();
 			Render();
