@@ -62,6 +62,8 @@ namespace Alice
         outMaterial.roughness = std::clamp(outMaterial.roughness, 0.0f, 1.0f);
         outMaterial.metalness = std::clamp(outMaterial.metalness, 0.0f, 1.0f);
         outMaterial.ambientOcclusion = std::clamp(outMaterial.ambientOcclusion, 0.0f, 1.0f);
+        outMaterial.envDiffuseStrength = std::max(outMaterial.envDiffuseStrength, 0.0f);
+        outMaterial.envSpecularStrength = std::max(outMaterial.envSpecularStrength, 0.0f);
         // 노말맵 강도는 0.0f 이상으로 제한
         outMaterial.normalStrength = std::max(outMaterial.normalStrength, 0.0f);
         // 아웃라인 두께는 음수 방지
@@ -92,6 +94,8 @@ namespace Alice
         copy.roughness = std::clamp(copy.roughness, 0.0f, 1.0f);
         copy.metalness = std::clamp(copy.metalness, 0.0f, 1.0f);
         copy.ambientOcclusion = std::clamp(copy.ambientOcclusion, 0.0f, 1.0f);
+        copy.envDiffuseStrength = std::max(copy.envDiffuseStrength, 0.0f);
+        copy.envSpecularStrength = std::max(copy.envSpecularStrength, 0.0f);
         copy.normalStrength = std::max(copy.normalStrength, 0.0f);
         copy.outlineWidth = std::max(copy.outlineWidth, 0.0f);
 

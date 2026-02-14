@@ -121,6 +121,8 @@ namespace Alice
                     cmd.roughness = mat->roughness;
                     cmd.metalness = mat->metalness;
                     cmd.ambientOcclusion = mat->ambientOcclusion;
+                    cmd.envDiffuseStrength = mat->envDiffuseStrength;
+                    cmd.envSpecularStrength = mat->envSpecularStrength;
                     cmd.normalStrength = mat->normalStrength;
                     cmd.shadingMode = mat->shadingMode;
                     cmd.transparent = mat->transparent;

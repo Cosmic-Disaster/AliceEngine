@@ -161,6 +161,8 @@ namespace Alice
             .property("roughness", &MaterialComponent::roughness)
             .property("metalness", &MaterialComponent::metalness)
             .property("ambientOcclusion", &MaterialComponent::ambientOcclusion)
+            .property("envDiffuseStrength", &MaterialComponent::envDiffuseStrength)
+            .property("envSpecularStrength", &MaterialComponent::envSpecularStrength)
             .property("shadingMode", &MaterialComponent::shadingMode)
             .property("assetPath", &MaterialComponent::assetPath)
             .property("albedoTexturePath", &MaterialComponent::albedoTexturePath)

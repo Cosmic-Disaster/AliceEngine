@@ -28,7 +28,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion;
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     // ToonPBREditable 파라미터
     float4   gToonPbrCuts;   // (cut1, cut2, cut3, strength)
@@ -106,7 +107,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion;
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     // ToonPBREditable 파라미터
     float4   gToonPbrCuts;   // (cut1, cut2, cut3, strength)
@@ -216,7 +218,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion;
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     // ToonPBREditable 파라미터
     float4   gToonPbrCuts;   // (cut1, cut2, cut3, strength)
@@ -321,7 +324,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion;
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     // ToonPBREditable 파라미터
     float4   gToonPbrCuts;   // (cut1, cut2, cut3, strength)
@@ -884,6 +888,9 @@ float4 main(PSInput input) : SV_TARGET
         float3 prefilteredColor = gIBL_Specular.SampleLevel(gSampler, Renv, roughness * kMaxSpecularMip).rgb;
         float2 specBRDF = gIBL_BRDF_LUT.Sample(gSampler, float2(NdotV, roughness)).rg;
         float3 specularIBL = prefilteredColor * (F0 * specBRDF.x + specBRDF.y);
+
+        diffuseIBL *= gEnvDiffuseStrength;
+        specularIBL *= gEnvSpecularStrength;
 
         // 최종 색상 = 직접광 + 간접광(IBL)
         float shadowIBL = lerp(0.35f, 1.0f, shadow);

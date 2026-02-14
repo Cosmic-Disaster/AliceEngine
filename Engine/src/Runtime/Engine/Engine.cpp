@@ -26,6 +26,7 @@ namespace Alice
 		GetModuleFileNameW(nullptr, pathBuf, MAX_PATH);
 		const std::filesystem::path exeDir = std::filesystem::path(pathBuf).parent_path();
 		pImpl->SavePvdSettings(exeDir);
+		pImpl->SaveLightingSettings(exeDir);
 
 		// 1) 게임 루프/시스템이 물리 월드 참조 못 하게 먼저 끊기
 		if (pImpl->m_physicsSystem)

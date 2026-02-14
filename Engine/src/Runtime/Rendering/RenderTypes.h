@@ -180,6 +180,8 @@ namespace Alice
         float             roughness   { 0.5f };
         float             metalness   { 0.0f };
         float             ambientOcclusion { 1.0f };
+        float             envDiffuseStrength { 1.0f };
+        float             envSpecularStrength { 1.0f };
         float             normalStrength { 1.0f }; // 노말맵 강도 조절
         int               shadingMode { -1 }; // -1: 전역, 0~7: 개별 셰이딩 모드, 6: OnlyTextureWithOutline, 7: ToonPBREditable
         bool              transparent { false };
@@ -387,9 +389,8 @@ namespace Alice
         // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
         float             normalStrength; // Offset: 240 -> 244
         float             ambientOcclusion; // Offset: 244 -> 248
-        
-        // [중요] float4 정렬을 위해 16바이트 경계(256)로 정렬
-        float             pad_align[2];   // Offset: 248 -> 256 (8바이트 패딩)
+        float             envDiffuseStrength; // Offset: 248 -> 252
+        float             envSpecularStrength; // Offset: 252 -> 256
 
         // ToonPBREditable 파라미터
         DirectX::XMFLOAT4 toonPbrCuts;    // Offset: 256 -> 272

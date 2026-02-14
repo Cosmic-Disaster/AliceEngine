@@ -166,6 +166,11 @@ namespace Alice
 			ViewportPicker& picker,
 			float& cameraMoveSpeed,
 			bool& useForwardRendering,
+			LightingParameters& lightingParams,
+			int& skyboxChoice,
+			std::string& skyboxCustomDir,
+			std::string& skyboxCustomPrefix,
+			int& skyboxResolution,
 			bool& pvdEnabled,
 			std::string& pvdHost,
 			int& pvdPort,
@@ -365,7 +370,12 @@ namespace Alice
 			DeferredRenderSystem& deferred,
 			int& shadingMode,
 			bool& useFillLight,
-			bool& useForwardRendering);
+			bool& useForwardRendering,
+			LightingParameters& lightingParams,
+			int& skyboxChoice,
+			std::string& skyboxCustomDir,
+			std::string& skyboxCustomPrefix,
+			int& skyboxResolution);
 		void DrawMaterialAssetEditorWindow(World& world);
 		void DrawUICurveAssetEditorWindow();
 		void HandleSceneLoadFlow(World& world, SceneManager* sceneManager, bool& isPlaying, EntityId& selectedEntity);

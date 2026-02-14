@@ -141,6 +141,11 @@ namespace Alice
 
 		ShadingMode m_shadingMode{ ShadingMode::PBR };
 		bool        m_useFillLight{ true };
+		LightingParameters m_savedLightingParameters{};
+		int m_skyboxChoice = 3; // 0 Off, 1 Bridge, 2 Indoor, 3 Baker, 4 darkenv, 5 Custom
+		std::string m_skyboxCustomDir;
+		std::string m_skyboxCustomPrefix;
+		int m_skyboxResolution = 0; // 0 HDR, 1 MDR
 
 		// 카메라 이동/회전을 위한 내부 상태 값들
 		DirectX::XMFLOAT3 m_cameraPosition{ 0.0f, 2.0f, -5.0f };
@@ -193,6 +198,8 @@ namespace Alice
 		bool InitializeConfigureResourceManagers(const std::filesystem::path& exeDir);
 		bool InitializeValidateGameDataIfNeeded();
 		void InitializeLoadPvdSettings(const std::filesystem::path& exeDir);
+		void InitializeLoadLightingSettings(const std::filesystem::path& exeDir);
+		void SaveLightingSettings(const std::filesystem::path& exeDir);
 		bool InitializePhysicsContext();
 		bool InitializeWindowAndInput(Engine& owner, int nCmdShow);
 		bool InitializeRenderDevice();

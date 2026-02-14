@@ -27,7 +27,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -102,7 +103,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -185,7 +187,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -285,7 +288,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -380,7 +384,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -417,6 +422,14 @@ float DitherThreshold(float2 pos)
     // Interleaved gradient noise (per-pixel hash, less visible grid)
     float n = 0.06711056f * pos.x + 0.00583715f * pos.y;
     return frac(52.9829189f * frac(n));
+}
+
+float Pack2x8(float a, float b)
+{
+    a = saturate(a);
+    b = saturate(b);
+    float2 enc = floor(float2(a, b) * 255.0f + 0.5f);
+    return (enc.x + enc.y * 256.0f) / 65535.0f;
 }
 
 GBufferOut main(VertexOut pIn)
@@ -496,7 +509,17 @@ GBufferOut main(VertexOut pIn)
     float toonStrength = saturate(gToonPbrCuts.w);
     float toonBlur = (gToonPbrLevels.w > 0.5f) ? 1.0f : 0.0f;
     float toonStrengthPacked = toonStrength * 0.5f + toonBlur * 0.5f;
-    gOut.ToonParams = float4(toonStrengthPacked, saturate(gToonPbrLevels.x), saturate(gToonPbrLevels.y), saturate(gToonPbrLevels.z));
+    const bool isToonPbr = (gShadingMode == 5 || gShadingMode == 7);
+    if (isToonPbr)
+    {
+        float packedLevels12 = Pack2x8(gToonPbrLevels.x, gToonPbrLevels.y);
+        float packedEnv = Pack2x8(gEnvDiffuseStrength, gEnvSpecularStrength);
+        gOut.ToonParams = float4(toonStrengthPacked, packedLevels12, saturate(gToonPbrLevels.z), packedEnv);
+    }
+    else
+    {
+        gOut.ToonParams = float4(saturate(gEnvDiffuseStrength), saturate(gEnvSpecularStrength), 0.0f, 0.0f);
+    }
     // shadingMode + AO를 [0,1] 범위로 인코딩하여 저장
     gOut.BaseColor  = float4(baseColor, saturate(shadingEncoded));
     
@@ -667,6 +690,14 @@ float ToonStepEditable(float n, float3 cuts, float3 levels, float strength, floa
                   (n > c1) ? l1 :
                              l0;
     return lerp(n, level, t);
+}
+
+float2 Unpack2x8(float v)
+{
+    float raw = saturate(v) * 65535.0f;
+    float hi = floor(raw / 256.0f);
+    float lo = raw - hi * 256.0f;
+    return float2(lo, hi) / 255.0f;
 }
 
 
@@ -966,6 +997,21 @@ float4 main(PS_INPUT_QUAD pIn) : SV_Target
     const bool usePbr = (shadingMode == 4 || shadingMode == 5 || shadingMode == 7);
     const bool toonPbr = (shadingMode == 5 || shadingMode == 7);
     const bool toonEditable = (shadingMode == 7);
+    float envDiffuseStrength = 1.0f;
+    float envSpecularStrength = 1.0f;
+    if (toonPbr)
+    {
+        float2 levels12 = Unpack2x8(toonParams.g);
+        toonLevels = float3(levels12.x, levels12.y, toonParams.b);
+        float2 env = Unpack2x8(toonParams.a);
+        envDiffuseStrength = env.x;
+        envSpecularStrength = env.y;
+    }
+    else
+    {
+        envDiffuseStrength = toonParams.r;
+        envSpecularStrength = toonParams.g;
+    }
 
     float shadowVis = CalcShadowFactorDeferred(posW, g_ShadowMap, g_ShadowSampler);
 
@@ -1110,6 +1156,9 @@ float4 main(PS_INPUT_QUAD pIn) : SV_Target
     float3 prefilteredColor = g_IBL_Specular.SampleLevel(g_Sam, Renv, roughness * kMaxSpecularMip).rgb;
     float2 specBRDF = g_IBL_BRDF_LUT.Sample(g_SamplerLinear, float2(NdotV, roughness)).rg;
     float3 specularIBL = prefilteredColor * (F0 * specBRDF.x + specBRDF.y);
+
+    diffuseIBL *= envDiffuseStrength;
+    specularIBL *= envSpecularStrength;
     
     float3 iblColor = (diffuseIBL + specularIBL) * ao;
 
@@ -1141,7 +1190,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1241,7 +1291,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1428,7 +1479,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1568,6 +1620,9 @@ float4 main(PSIn pIn) : SV_Target
     float3 prefilteredColor = g_IBL_Specular.SampleLevel(g_Sam, Renv, roughness * kMaxSpecularMip).rgb;
     float2 specBRDF = g_IBL_BRDF_LUT.Sample(g_Sam, float2(NdotV, roughness)).rg;
     float3 specularIBL = prefilteredColor * (F0 * specBRDF.x + specBRDF.y);
+
+    diffuseIBL *= gEnvDiffuseStrength;
+    specularIBL *= gEnvSpecularStrength;
     float3 ibl = (diffuseIBL + specularIBL) * ao;
 
     float3 outLinear = direct + ibl;
@@ -1596,7 +1651,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1646,7 +1702,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1706,7 +1763,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;
@@ -1786,7 +1844,8 @@ cbuffer CBPerObject : register(b0)
     // 노말맵 강도 조절 (0.0: 평평, 1.0: 원본, >1.0: 과장)
     float    gNormalStrength;
     float    gAmbientOcclusion; // 0~1 AO
-    float2   gPadAlign;
+    float    gEnvDiffuseStrength;
+    float    gEnvSpecularStrength;
 
     float4   gToonPbrCuts;
     float4   gToonPbrLevels;

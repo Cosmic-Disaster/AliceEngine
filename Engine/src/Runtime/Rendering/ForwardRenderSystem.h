@@ -88,7 +88,7 @@ namespace Alice
         bool EnsureInstanceBufferCapacity(std::size_t requiredCount);
 
         bool CreateSkyboxResources();
-        bool CreateIblResources(const std::string& iblDir = "Bridge",  const std::string& iblName = "bridge");
+        bool CreateIblResources(const std::string& iblDir = "Bridge",  const std::string& iblName = "bridge", const std::string& iblSuffix = "HDR");
         bool CreateSkinnedResources();
         bool CreateToneMappingResources();
 
@@ -107,6 +107,8 @@ namespace Alice
                                float normalStrength,
                                const DirectX::XMFLOAT4& toonPbrCuts,
                                const DirectX::XMFLOAT4& toonPbrLevels,
+                               float envDiffuseStrength = 1.0f,
+                               float envSpecularStrength = 1.0f,
                                const DirectX::XMFLOAT3& outlineColor = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f),
                                float outlineWidth = 0.01f);
 
@@ -204,6 +206,7 @@ namespace Alice
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_iblSpecularSRV;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_iblBrdfLutSRV;
         std::string                                      m_currentIblSet; // 현재 IBL 세트 이름 (Bridge/Indoor/Sample)
+        std::string                                      m_currentIblSuffix{ "HDR" };
 
         // ==== 게임 뷰포트 렌더 타깃 (Scene Color) ====
         Microsoft::WRL::ComPtr<ID3D11Texture2D>         m_sceneColorTex;
@@ -326,7 +329,7 @@ namespace Alice
 
         /// IBL 세트를 변경합니다 (Bridge/Indoor/Sample)
         /// - 씬 전환 시 호출하여 환경에 맞는 IBL을 로드합니다.
-        bool SetIblSet(const std::string& iblDir = "Bridge", const std::string& iblName = "bridge");
+        bool SetIblSet(const std::string& iblDir = "Bridge", const std::string& iblName = "bridge", const std::string& iblSuffix = "HDR");
 
         /// 스카이박스 활성화/비활성화를 설정합니다.
         /// - enabled가 false이면 IBL도 함께 비활성화됩니다.

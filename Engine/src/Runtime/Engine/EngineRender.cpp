@@ -147,6 +147,11 @@ namespace Alice
 			m_isPlaying, shadingMode, m_useFillLight,
 			m_selectedEntity, m_viewportPicker, m_cameraMoveSpeed,
 			m_useForwardRendering,
+			m_savedLightingParameters,
+			m_skyboxChoice,
+			m_skyboxCustomDir,
+			m_skyboxCustomPrefix,
+			m_skyboxResolution,
 			m_pvdEnabled, m_pvdHost, m_pvdPort,
 			m_debugDraw
 		);
@@ -805,7 +810,8 @@ namespace Alice
 		// 씬 파일에서 IBL 세트 정보를 읽어올 수 있도록 확장 가능하지만,
 		// 현재는 기본적으로 "Bridge" IBL 세트를 사용합니다.
 		// 향후 씬 파일에 IBL 세트 정보를 추가하면 여기서 읽어올 수 있습니다.
-		m_forwardRenderSystem->SetIblSet();
+		const std::string iblSuffix = (m_skyboxResolution == 1) ? "MDR" : "HDR";
+		m_forwardRenderSystem->SetIblSet("Bridge", "bridge", iblSuffix);
 	}
 
 }
